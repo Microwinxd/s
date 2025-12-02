@@ -1,32 +1,88 @@
 const express = require("express");
-const { User } = require("../../config");
+const { db, User } = require("../../config.js");
+const {
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc
+} = require("firebase/firestore");
+
 const routes = express.Router();
 
+// ✅ GET ALL USERS
 routes.get("/", async (req, res) => {
-  const result = await User.get();
-  const list = result.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  res.send(list);
+  try {
+    const snapshot = await getDocs(User);
+    const list = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.status(200).json(list);
+  } catch (err) {
+    res.status(500).json({
+      error: "Failed to fetch users",
+      details: err.message
+    });
+  }
 });
 
+// ✅ CREATE USER
 routes.post("/create", async (req, res) => {
-  await User.add(req.body);
-  res.send({ msg: "Staff added successfully." });
+  try {
+    const result = await addDoc(User, req.body);
+
+    res.status(201).json({
+      msg: "Staff added successfully.",
+      id: result.id
+    });
+  } catch (err) {
+    res.status(400).json({
+      error: "Failed to add user",
+      details: err.message
+    });
+  }
 });
 
+// ✅ UPDATE USER
 routes.put("/update/:user_id", async (req, res) => {
-  const id = req.params.user_id;
-  delete req.body.id;
-  await User.doc(id).update(req.body);
-  res.send({ msg: "Staff updated successfully." });
+  try {
+    const id = req.params.user_id;
+    delete req.body.id;
+
+    const userRef = doc(db, "users", id);
+    await updateDoc(userRef, req.body);
+
+    res.status(200).json({ msg: "Staff updated successfully." });
+  } catch (err) {
+    res.status(404).json({
+      error: "Failed to update user",
+      details: err.message
+    });
+  }
 });
 
+// ✅ DELETE USER
 routes.delete("/delete/:user_id", async (req, res) => {
-  const id = req.params.user_id;
-  await User.doc(id).delete();
-  res.send({ msg: "Staff deleted successfully." });
+  try {
+    const id = req.params.user_id;
+
+    const userRef = doc(db, "users", id);
+    await deleteDoc(userRef);
+
+    res.status(200).json({ msg: "Staff deleted successfully." });
+  } catch (err) {
+    res.status(404).json({
+      error: "Failed to delete user",
+      details: err.message
+    });
+  }
 });
 
 module.exports = routes;
+
+
  
 
 

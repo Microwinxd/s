@@ -109,7 +109,7 @@
 
 const express = require("express");
 const path = require("path");
-const { tables } = require("../../config");
+const { tables } = require("../../config.js");
 const routes = express.Router();
 const multer = require("multer");
 

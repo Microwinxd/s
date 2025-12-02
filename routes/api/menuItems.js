@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { menuItems } = require("../../config");
+const { menuItems } = require("../../config.js");
 const routes = express.Router();
 const multer = require("multer");
 

@@ -1,6 +1,6 @@
 const { json } = require("body-parser");
 const express = require("express");
-const { Orders } = require("../../config");
+const { Orders } = require("../../config.js");
 const routes = express.Router();
 
 routes.get("/", async (req, res) => {

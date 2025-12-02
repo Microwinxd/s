@@ -1,5 +1,5 @@
 const express = require("express");
-const { User } = require("../../config");
+const { User } = require("../../config.js");
 const routes = express.Router();
 
 routes.post("/login", async (req, res) => {
