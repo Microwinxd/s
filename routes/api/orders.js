@@ -1,32 +1,82 @@
-const { json } = require("body-parser");
 const express = require("express");
-const { Orders } = require("../../config.js");
 const routes = express.Router();
 
+const {
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc
+} = require("firebase/firestore");
+
+const { db } = require("../../config.js"); // ✅ must export db from config
+
+// ✅ Firestore Collection Reference (v9)
+const Orders = collection(db, "orders");
+
+// ✅ GET ALL ORDERS
 routes.get("/", async (req, res) => {
-  const result = await Orders.get();
-  const list = result.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  res.send(list);
+  try {
+    const result = await getDocs(Orders);
+
+    const list = result.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+
+    res.send(list);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Failed to load orders" });
+  }
 });
+
+// ✅ CREATE ORDER
 routes.post("/create", async (req, res) => {
-  await Orders.add(req.body);
-  res.send({ msg: "Orders added successfully." });
+  try {
+    await addDoc(Orders, req.body);
+    res.send({ msg: "Orders added successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Failed to add order" });
+  }
 });
 
+// ✅ UPDATE ORDERS (BATCH UPDATE)
 routes.put("/update/:order_id", async (req, res) => {
-  req.body.map(async (x) => {
-    await Orders.doc(x.id).update(x);
-  });
-  res.send({ msg: "Orders updated successfully." });
+  try {
+    const updates = req.body; // expects array
+
+    for (const x of updates) {
+      const orderRef = doc(db, "orders", x.id);
+      await updateDoc(orderRef, x);
+    }
+
+    res.send({ msg: "Orders updated successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Failed to update orders" });
+  }
 });
 
+// ✅ DELETE ORDER
 routes.delete("/delete/:order_id", async (req, res) => {
-  const id = req.params.order_id;
-  await Orders.doc(id).delete();
-  res.send({ msg: "Orders deleted successfully." });
+  try {
+    const id = req.params.order_id;
+    const orderRef = doc(db, "orders", id);
+
+    await deleteDoc(orderRef);
+
+    res.send({ msg: "Orders deleted successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Failed to delete order" });
+  }
 });
 
 module.exports = routes;
+
 
 
 

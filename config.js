@@ -22,7 +22,6 @@ const db = getFirestore(app);
 // ✅ Firestore Collections
 const User = collection(db, "users");
 const Category = collection(db, "categories");
-const Dishes = collection(db, "dishes");
 const Orders = collection(db, "orders");
 const menuItems = collection(db, "menuItems");
 const tables = collection(db, "tables");
@@ -32,7 +31,6 @@ module.exports = {
   db,
   User,
   Category,
-  Dishes,
   Orders,
   menuItems,
   tables
