@@ -112,6 +112,14 @@ const path = require("path");
 const { tables } = require("../../config.js");
 const routes = express.Router();
 const multer = require("multer");
+const {
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc
+} = require("firebase/firestore");
 
 // handle image uploads
 var storage = multer.diskStorage({
@@ -126,12 +134,16 @@ var storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-//  GET ALL MENU ITEMS
+//  GET ALL MENU tables
 routes.get("/", async (req, res) => {
   try {
-    const result = await tables.get();
-    const list = result.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    res.send(list);
+    const result = await getDocs(tables);
+
+    const list = result.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+    res.send(list)
   } catch (err) {
     console.error(err);
     res.status(500).send({ error: "Failed to load tables" });
@@ -139,36 +151,30 @@ routes.get("/", async (req, res) => {
 });
 
 //  CREATE MENU ITEM
-routes.post("/create", upload.single("image"), async (req, res) => {
+routes.post("/create", async (req, res) => {
   try {
-    if (req.file) {
-      await tables.add({ ...req.body, file: req.file.filename });
-    } else {
-      await tables.add({ ...req.body, file: "" });
-    }
-    res.send({ msg: "Item added successfully." });
+    await addDoc(tables, req.body);
+    res.send({ msg: "Table added successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to create table" });
+    res.status(500).send({ error: "Failed to add order" });
   }
 });
 
 //  UPDATE MENU ITEM  
-routes.put("/update/:tables_id", upload.single("file"), async (req, res) => {
+routes.put("/update/:table_id", async (req, res) => {
   try {
-    const id = req.params.tables_id;
-    delete req.body.id;
+    const updates = req.body; // expects array
 
-    if (req.file) {
-      await tables.doc(id).update({ ...req.body, file: req.file.filename });
-    } else {
-      await tables.doc(id).update(req.body);
+    for (const x of updates) {
+      const tableRef = doc(db, "tables", x.id);
+      await updateDoc(tableRef, x);
     }
 
-    res.send({ msg: "Item updated successfully." });
+    res.send({ msg: "talbe updated successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to update table" });
+    res.status(500).send({ error: "Failed to update orders" });
   }
 });
 
