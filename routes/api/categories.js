@@ -1,6 +1,14 @@
 const express = require("express");
-const { Category } = require("../../config.js");
+const { db, Category } = require("../../config.js");
 const routes = express.Router();
+
+const {
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+} = require("firebase/firestore");
 
 /**
  * @swagger
@@ -23,17 +31,19 @@ const routes = express.Router();
  *         description: Server error
  */
 
-// ✅ GET ALL CATEGORIES
+// ✅ ✅ ✅ GET ALL CATEGORIES (v9)
 routes.get("/", async (req, res) => {
   try {
-    const result = await Category.get();
-    const list = result.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
+    const snapshot = await getDocs(Category);
+
+    const list = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
     }));
+
     res.status(200).json(list);
   } catch (err) {
-    console.error(err);
+    console.error("GET /categories ERROR:", err);
     res.status(500).json({ error: "Failed to load categories" });
   }
 });
@@ -64,13 +74,14 @@ routes.get("/", async (req, res) => {
  *         description: Server error
  */
 
-// ✅ CREATE CATEGORY
+// ✅ ✅ ✅ CREATE CATEGORY (v9)
 routes.post("/create", async (req, res) => {
   try {
-    await Category.add(req.body);
+    await addDoc(Category, req.body); // ✅ v9 add
+
     res.status(201).json({ msg: "Category added successfully." });
   } catch (err) {
-    console.error(err);
+    console.error("CREATE /categories ERROR:", err);
     res.status(500).json({ error: "Failed to create category" });
   }
 });
@@ -83,17 +94,18 @@ routes.post("/create", async (req, res) => {
  *     tags: [Categories]
  */
 
-// ✅ UPDATE CATEGORY
+// ✅ ✅ ✅ UPDATE CATEGORY (v9)
 routes.put("/update/:category_id", async (req, res) => {
   try {
     const id = req.params.category_id;
     delete req.body.id;
 
-    await Category.doc(id).update(req.body);
+    const categoryRef = doc(db, "categories", id); // ✅ v9 doc ref
+    await updateDoc(categoryRef, req.body);        // ✅ v9 update
 
     res.status(200).json({ msg: "Category updated successfully." });
   } catch (err) {
-    console.error(err);
+    console.error("UPDATE /categories ERROR:", err);
     res.status(500).json({ error: "Failed to update category" });
   }
 });
@@ -106,16 +118,17 @@ routes.put("/update/:category_id", async (req, res) => {
  *     tags: [Categories]
  */
 
-// ✅ DELETE CATEGORY
+// ✅ ✅ ✅ DELETE CATEGORY (v9)
 routes.delete("/delete/:category_id", async (req, res) => {
   try {
     const id = req.params.category_id;
 
-    await Category.doc(id).delete();
+    const categoryRef = doc(db, "categories", id); // ✅ v9 doc ref
+    await deleteDoc(categoryRef);                  // ✅ v9 delete
 
     res.status(200).json({ msg: "Category deleted successfully." });
   } catch (err) {
-    console.error(err);
+    console.error("DELETE /categories ERROR:", err);
     res.status(500).json({ error: "Failed to delete category" });
   }
 });
