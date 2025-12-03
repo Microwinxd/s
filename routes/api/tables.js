@@ -109,9 +109,10 @@
 
 const express = require("express");
 const path = require("path");
-const { tables } = require("../../config.js");
+const { db } = require("../../config.js"); // ✅ FIXED
 const routes = express.Router();
 const multer = require("multer");
+
 const {
   collection,
   getDocs,
@@ -121,8 +122,11 @@ const {
   deleteDoc
 } = require("firebase/firestore");
 
-// handle image uploads
-var storage = multer.diskStorage({
+// ✅ PROPER COLLECTION REFERENCE
+const tablesRef = collection(db, "tables");
+
+// ✅ IMAGE STORAGE CONFIG
+const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join("images/"));
   },
@@ -132,64 +136,77 @@ var storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
-//  GET ALL MENU tables
+// ✅ GET ALL TABLES
 routes.get("/", async (req, res) => {
   try {
-    const result = await getDocs(tables);
+    const result = await getDocs(tablesRef);
 
     const list = result.docs.map((docSnap) => ({
       id: docSnap.id,
       ...docSnap.data(),
     }));
-    res.send(list)
+
+    res.status(200).json(list);
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to load tables" });
+    res.status(500).json({ error: "Failed to load tables" });
   }
 });
 
-//  CREATE MENU ITEM
-routes.post("/create", async (req, res) => {
+// ✅ CREATE TABLE (WITH IMAGE UPLOAD)
+routes.post("/create", upload.single("file"), async (req, res) => {
   try {
-    await addDoc(tables, req.body);
-    res.send({ msg: "Table added successfully." });
+    const data = {
+      ...req.body,
+      file: req.file ? req.file.filename : ""
+    };
+
+    await addDoc(tablesRef, data);
+
+    res.status(201).json({ msg: "Table added successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to add order" });
+    res.status(500).json({ error: "Failed to add table" });
   }
 });
 
-//  UPDATE MENU ITEM  
-routes.put("/update/:table_id", async (req, res) => {
+// ✅ UPDATE SINGLE TABLE (MATCHES SWAGGER)
+routes.put("/update/:table_id", upload.single("file"), async (req, res) => {
   try {
-    const updates = req.body; // expects array
+    const id = req.params.table_id;
+    const tableRef = doc(db, "tables", id);
 
-    for (const x of updates) {
-      const tableRef = doc(db, "tables", x.id);
-      await updateDoc(tableRef, x);
+    const updates = {
+      ...req.body
+    };
+
+    if (req.file) {
+      updates.file = req.file.filename;
     }
 
-    res.send({ msg: "talbe updated successfully." });
+    await updateDoc(tableRef, updates);
+
+    res.status(200).json({ msg: "Table updated successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to update orders" });
+    res.status(500).json({ error: "Failed to update table" });
   }
 });
 
-//  DELETE MENU ITEM 
+// ✅ DELETE TABLE (FIXED PARAM NAME)
 routes.delete("/delete/:table_id", async (req, res) => {
   try {
-    const id = req.params.order_id;
+    const id = req.params.table_id;
     const tableRef = doc(db, "tables", id);
 
     await deleteDoc(tableRef);
 
-    res.send({ msg: "Orders deleted successfully." });
+    res.status(200).json({ msg: "Table deleted successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to delete order" });
+    res.status(500).json({ error: "Failed to delete table" });
   }
 });
 
