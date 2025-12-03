@@ -179,14 +179,17 @@ routes.put("/update/:table_id", async (req, res) => {
 });
 
 //  DELETE MENU ITEM 
-routes.delete("/delete/:tables_id", async (req, res) => {
+routes.delete("/delete/:table_id", async (req, res) => {
   try {
-    const id = req.params.tables_id;
-    await tables.doc(id).delete();
-    res.send({ msg: "Item deleted successfully." });
+    const id = req.params.order_id;
+    const tableRef = doc(db, "tables", id);
+
+    await deleteDoc(tableRef);
+
+    res.send({ msg: "Orders deleted successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to delete table" });
+    res.status(500).send({ error: "Failed to delete order" });
   }
 });
 

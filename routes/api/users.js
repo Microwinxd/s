@@ -1,6 +1,8 @@
 const express = require("express");
-const { db, User } = require("../../config.js");
+const { db } = require("../../config.js");
+
 const {
+  collection,
   getDocs,
   addDoc,
   doc,
@@ -10,10 +12,14 @@ const {
 
 const routes = express.Router();
 
+// ✅ USERS COLLECTION REFERENCE (FIXES YOUR GET ISSUE)
+const usersRef = collection(db, "users");
+
 // ✅ GET ALL USERS
 routes.get("/", async (req, res) => {
   try {
-    const snapshot = await getDocs(User);
+    const snapshot = await getDocs(usersRef);
+
     const list = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data()
@@ -31,7 +37,7 @@ routes.get("/", async (req, res) => {
 // ✅ CREATE USER
 routes.post("/create", async (req, res) => {
   try {
-    const result = await addDoc(User, req.body);
+    const result = await addDoc(usersRef, req.body);
 
     res.status(201).json({
       msg: "Staff added successfully.",
@@ -49,7 +55,8 @@ routes.post("/create", async (req, res) => {
 routes.put("/update/:user_id", async (req, res) => {
   try {
     const id = req.params.user_id;
-    delete req.body.id;
+
+    delete req.body.id; // ✅ Prevent ID overwrite
 
     const userRef = doc(db, "users", id);
     await updateDoc(userRef, req.body);
@@ -81,6 +88,7 @@ routes.delete("/delete/:user_id", async (req, res) => {
 });
 
 module.exports = routes;
+
 
 
  
