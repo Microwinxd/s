@@ -44,21 +44,24 @@ routes.post("/create", async (req, res) => {
 });
 
 // ✅ UPDATE ORDERS (BATCH UPDATE)
+// ✅ UPDATE SINGLE ORDER
 routes.put("/update/:order_id", async (req, res) => {
   try {
-    const updates = req.body; // expects array
+    const id = req.params.order_id;
+    const updates = req.body;
 
-    for (const x of updates) {
-      const orderRef = doc(db, "orders", x.id);
-      await updateDoc(orderRef, x);
-    }
+    delete updates.id; // ✅ prevent ID overwrite
 
-    res.send({ msg: "Orders updated successfully." });
+    const orderRef = doc(db, "orders", id);
+    await updateDoc(orderRef, updates);
+
+    res.status(200).send({ msg: "Order updated successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to update orders" });
+    res.status(500).send({ error: "Failed to update order" });
   }
 });
+
 
 // ✅ DELETE ORDER
 routes.delete("/delete/:order_id", async (req, res) => {
