@@ -2,191 +2,121 @@ const express = require("express");
 const { Category } = require("../../config.js");
 const routes = express.Router();
 
-
 /**
  * @swagger
  * tags:
- *   name: MenuItems
- *   description: Menu item management API
+ *   name: Categories
+ *   description: Category management API
  */
 
 /**
  * @swagger
- * /api/menuItems:
+ * /api/categories:
  *   get:
- *     summary: Get all menu items
- *     description: Retrieves all menu items from the database.
- *     tags: [MenuItems]
+ *     summary: Get all categories
+ *     description: Retrieves all categories from the database.
+ *     tags: [Categories]
  *     responses:
  *       200:
- *         description: Successfully retrieved menu items
+ *         description: Successfully retrieved categories
  *       500:
  *         description: Server error
  */
-
 
 // ✅ GET ALL CATEGORIES
 routes.get("/", async (req, res) => {
   try {
     const result = await Category.get();
-    const list = result.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    res.send(list);
+    const list = result.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.status(200).json(list);
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to load categories" });
+    res.status(500).json({ error: "Failed to load categories" });
   }
 });
 
-
 /**
  * @swagger
- * /api/menuItems/create:
+ * /api/categories/create:
  *   post:
- *     summary: Create a new menu item
- *     description: Adds a new menu item to the database with optional image upload.
- *     tags: [MenuItems]
+ *     summary: Create a new category
+ *     description: Adds a new category to the database.
+ *     tags: [Categories]
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
- *               description:
- *                 type: string
- *               price:
- *                 type: number
- *               categoryId:
- *                 type: string
- *               dietaryFlags:
- *                 type: array
- *                 items:
- *                   type: string
- *               image:
- *                 type: string
- *                 format: binary
+ *                 example: Drinks
  *     responses:
- *       200:
- *         description: Menu item created successfully
+ *       201:
+ *         description: Category created successfully
  *       400:
  *         description: Bad request
  *       500:
  *         description: Server error
  */
 
-
-
 // ✅ CREATE CATEGORY
 routes.post("/create", async (req, res) => {
   try {
     await Category.add(req.body);
-    res.send({ msg: "Category added successfully." });
+    res.status(201).json({ msg: "Category added successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to create category" });
+    res.status(500).json({ error: "Failed to create category" });
   }
 });
 
-
 /**
  * @swagger
- * /api/menuItems/update/{menuItems_id}:
+ * /api/categories/update/{category_id}:
  *   put:
- *     summary: Update a menu item
- *     description: Updates an existing menu item with optional image upload.
- *     tags: [MenuItems]
- *     parameters:
- *       - in: path
- *         name: menuItems_id
- *         required: true
- *         schema:
- *           type: string
- *         description: The menu item ID
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *               price:
- *                 type: number
- *               categoryId:
- *                 type: string
- *               dietaryFlags:
- *                 type: array
- *                 items:
- *                   type: string
- *               file:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Menu item updated successfully
- *       404:
- *         description: Menu item not found
- *       500:
- *         description: Server error
+ *     summary: Update a category
+ *     tags: [Categories]
  */
-
-
-
 
 // ✅ UPDATE CATEGORY
 routes.put("/update/:category_id", async (req, res) => {
   try {
     const id = req.params.category_id;
     delete req.body.id;
+
     await Category.doc(id).update(req.body);
-    res.send({ msg: "Category updated successfully." });
+
+    res.status(200).json({ msg: "Category updated successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to update category" });
+    res.status(500).json({ error: "Failed to update category" });
   }
 });
 
-
 /**
  * @swagger
- * /api/menuItems/delete/{menuItems_id}:
+ * /api/categories/delete/{category_id}:
  *   delete:
- *     summary: Delete a menu item
- *     description: Removes a menu item from the database.
- *     tags: [MenuItems]
- *     parameters:
- *       - in: path
- *         name: menuItems_id
- *         required: true
- *         schema:
- *           type: string
- *         description: The menu item ID
- *     responses:
- *       200:
- *         description: Menu item deleted successfully
- *       404:
- *         description: Menu item not found
- *       500:
- *         description: Server error
+ *     summary: Delete a category
+ *     tags: [Categories]
  */
-
-
-
 
 // ✅ DELETE CATEGORY
 routes.delete("/delete/:category_id", async (req, res) => {
   try {
     const id = req.params.category_id;
+
     await Category.doc(id).delete();
-    res.send({ msg: "Category deleted successfully." });
+
+    res.status(200).json({ msg: "Category deleted successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to delete category" });
+    res.status(500).json({ error: "Failed to delete category" });
   }
 });
 

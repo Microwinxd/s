@@ -4,8 +4,8 @@ const { menuItems } = require("../../config.js");
 const routes = express.Router();
 const multer = require("multer");
 
-// handle image uploads
-var storage = multer.diskStorage({
+// ✅ IMAGE UPLOAD CONFIG
+const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join("images/"));
   },
@@ -15,207 +15,141 @@ var storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
-
-
+const upload = multer({ storage });
 
 /**
  * @swagger
  * tags:
- *   name: Orders
- *   description: Order management API
+ *   name: Menu
+ *   description: Menu item management API
  */
 
 /**
  * @swagger
- * /api/orders:
+ * /api/menu:
  *   get:
- *     summary: Get all orders
- *     description: Retrieves all orders from the database.
- *     tags: [Orders]
+ *     summary: Get all menu items
+ *     description: Retrieves all menu items from the database.
+ *     tags: [Menu]
  *     responses:
  *       200:
- *         description: Successfully retrieved orders
+ *         description: Successfully retrieved menu items
  *       500:
  *         description: Server error
  */
 
-
-
-
-//  GET ALL MENU ITEMS
+// ✅ GET ALL MENU ITEMS
 routes.get("/", async (req, res) => {
   try {
     const result = await menuItems.get();
-    const list = result.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    res.send(list);
+    const list = result.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.status(200).json(list);
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to fetch menu items" });
+    res.status(500).json({ error: "Failed to fetch menu items" });
   }
 });
 
-
-
 /**
  * @swagger
- * /api/orders/create:
+ * /api/menu/create:
  *   post:
- *     summary: Create a new order
- *     description: Adds a new order to the database.
- *     tags: [Orders]
+ *     summary: Create a new menu item
+ *     description: Adds a new menu item to the database.
+ *     tags: [Menu]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               tableRef:
+ *               name:
  *                 type: string
- *               items:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     menuItemId:
- *                       type: string
- *                     name:
- *                       type: string
- *                     price:
- *                       type: number
- *                     quantity:
- *                       type: number
- *               status:
+ *               price:
+ *                 type: number
+ *               description:
  *                 type: string
- *                 example: Pending
+ *               category:
+ *                 type: string
+ *               file:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
- *         description: Order created successfully
- *       400:
- *         description: Bad request
+ *         description: Item created successfully
  *       500:
  *         description: Server error
  */
 
-
-
-//  CREATE MENU ITEM
-routes.post("/create", upload.single("image"), async (req, res) => {
+// ✅ CREATE MENU ITEM
+routes.post("/create", upload.single("file"), async (req, res) => {
   try {
-    if (req.file) {
-      await menuItems.add({ ...req.body, file: req.file.filename });
-    } else {
-      await menuItems.add({ ...req.body, file: "" });
-    }
-    res.send({ msg: "Item added successfully." });
+    const data = {
+      ...req.body,
+      file: req.file ? req.file.filename : "",
+    };
+
+    await menuItems.add(data);
+    res.status(201).json({ msg: "Item added successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to create menu item" });
+    res.status(500).json({ error: "Failed to create menu item" });
   }
 });
 
-
-
 /**
  * @swagger
- * /api/orders/update/{order_id}:
+ * /api/menu/update/{menuItem_id}:
  *   put:
- *     summary: Update order(s)
- *     description: Updates one or more orders in the database.
- *     tags: [Orders]
- *     parameters:
- *       - in: path
- *         name: order_id
- *         required: true
- *         schema:
- *           type: string
- *         description: The order ID (required by route)
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 status:
- *                   type: string
- *                 items:
- *                   type: array
- *     responses:
- *       200:
- *         description: Orders updated successfully
- *       500:
- *         description: Server error
+ *     summary: Update a menu item
+ *     tags: [Menu]
  */
 
-
-
-//  UPDATE MENU ITEM  (FIXED — uses menuItems, NOT Dishes)
-routes.put("/update/:menuItems_id", upload.single("file"), async (req, res) => {
+// ✅ UPDATE MENU ITEM
+routes.put("/update/:menuItem_id", upload.single("file"), async (req, res) => {
   try {
-    const id = req.params.menuItems_id;
+    const id = req.params.menuItem_id;
     delete req.body.id;
 
+    const updates = {
+      ...req.body,
+    };
+
     if (req.file) {
-      await menuItems.doc(id).update({ ...req.body, file: req.file.filename });
-    } else {
-      await menuItems.doc(id).update(req.body);
+      updates.file = req.file.filename;
     }
 
-    res.send({ msg: "Item updated successfully." });
+    await menuItems.doc(id).update(updates);
+
+    res.status(200).json({ msg: "Item updated successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to update menu item" });
+    res.status(500).json({ error: "Failed to update menu item" });
   }
 });
 
-
-
-
 /**
  * @swagger
- * /api/orders/delete/{order_id}:
+ * /api/menu/delete/{menuItem_id}:
  *   delete:
- *     summary: Delete an order
- *     description: Removes an order from the database.
- *     tags: [Orders]
- *     parameters:
- *       - in: path
- *         name: order_id
- *         required: true
- *         schema:
- *           type: string
- *         description: The order ID
- *     responses:
- *       200:
- *         description: Order deleted successfully
- *       404:
- *         description: Order not found
- *       500:
- *         description: Server error
+ *     summary: Delete a menu item
+ *     tags: [Menu]
  */
 
-
-
-//  DELETE MENU ITEM (FIXED)
-routes.delete("/delete/:menuItems_id", async (req, res) => {
+// ✅ DELETE MENU ITEM
+routes.delete("/delete/:menuItem_id", async (req, res) => {
   try {
-    const id = req.params.menuItems_id;
+    const id = req.params.menuItem_id;
     await menuItems.doc(id).delete();
-    res.send({ msg: "Item deleted successfully." });
+    res.status(200).json({ msg: "Item deleted successfully." });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ error: "Failed to delete menu item" });
+    res.status(500).json({ error: "Failed to delete menu item" });
   }
 });
 
 module.exports = routes;
-
-
-
-
