@@ -190,8 +190,10 @@ routes.put("/update/:table_id", upload.single("file"), async (req, res) => {
 
     res.status(200).json({ msg: "Table updated successfully." });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to update table" });
+    res.status(404).json({
+      error: "Failed to update table",
+      details: err.message
+    });
   }
 });
 
@@ -205,8 +207,10 @@ routes.delete("/delete/:table_id", async (req, res) => {
 
     res.status(200).json({ msg: "Table deleted successfully." });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete table" });
+    res.status(404).json({
+      error: "Failed to delete table",
+      details: err.message
+    });
   }
 });
 
