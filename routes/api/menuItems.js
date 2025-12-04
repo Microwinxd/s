@@ -116,8 +116,10 @@ routes.put("/update/:menuItem_id", upload.single("file"), async (req, res) => {
 
     res.status(200).json({ msg: "Item updated successfully." });
   } catch (err) {
-    console.error("UPDATE /menuItems ERROR:", err);
-    res.status(500).json({ error: "Failed to update menu item" });
+    res.status(404).json({
+      error: "Failed to update item",
+      details: err.message
+    });
   }
 });
 
@@ -139,8 +141,10 @@ routes.delete("/delete/:menuItem_id", async (req, res) => {
 
     res.status(200).json({ msg: "Item deleted successfully." });
   } catch (err) {
-    console.error("DELETE /menuItems ERROR:", err);
-    res.status(500).json({ error: "Failed to delete menu item" });
+    res.status(404).json({
+      error: "Failed to delete item",
+      details: err.message
+    });
   }
 });
 

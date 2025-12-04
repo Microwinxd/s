@@ -57,8 +57,10 @@ routes.put("/update/:order_id", async (req, res) => {
 
     res.status(200).send({ msg: "Order updated successfully." });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({ error: "Failed to update order" });
+    res.status(404).json({
+      error: "Failed to update order",
+      details: err.message
+    });
   }
 });
 
@@ -73,8 +75,10 @@ routes.delete("/delete/:order_id", async (req, res) => {
 
     res.send({ msg: "Orders deleted successfully." });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({ error: "Failed to delete order" });
+    res.status(404).json({
+      error: "Failed to delete order",
+      details: err.message
+    });
   }
 });
 

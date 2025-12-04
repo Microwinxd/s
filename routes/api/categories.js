@@ -105,8 +105,10 @@ routes.put("/update/:category_id", async (req, res) => {
 
     res.status(200).json({ msg: "Category updated successfully." });
   } catch (err) {
-    console.error("UPDATE /categories ERROR:", err);
-    res.status(500).json({ error: "Failed to update category" });
+    res.status(404).json({
+      error: "Failed to update category",
+      details: err.message
+    });
   }
 });
 
@@ -128,8 +130,10 @@ routes.delete("/delete/:category_id", async (req, res) => {
 
     res.status(200).json({ msg: "Category deleted successfully." });
   } catch (err) {
-    console.error("DELETE /categories ERROR:", err);
-    res.status(500).json({ error: "Failed to delete category" });
+    res.status(404).json({
+      error: "Failed to delete caterogy",
+      details: err.message
+    });
   }
 });
 
